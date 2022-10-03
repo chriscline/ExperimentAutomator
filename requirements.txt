@@ -1,0 +1,12 @@
+pyside2
+attrs
+numpy
+pandas
+xlrd
+pyttsx3 # for text-to-speech
+pypiwin32 # required by pyttsx3 on windows
+pywinauto
+pyqtgraph
+zmq
+pyperclip
+psutil

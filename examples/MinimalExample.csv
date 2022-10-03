@@ -1,0 +1,23 @@
+Label,repeat,controlFlow,eval,getInput,copyToClipboard,speak,log,runScript,runScriptInBackground,wait,messageBox,VLC,LabRecorder #skip
+,,,testVal = True,,,,,,,,,,
+,start conditionalTest,,,,,,,,,,,,
+,,if testVal,,,,,testVal was True,,,,,,
+,,else,,,,,testVal was False,,,,,,
+,,end,,,,,,,,,,,
+,end conditionalTest,,,,,,,,,,,,
+,,,testVal = False,,,,,,,,,,
+,repeat conditionalTest,,,,,,,,,,,,
+,,,count=0,,,,,,,,,,
+,,while count < 5,count += 1,,,,'%d' % count,,,,,,
+,,end,,,,,,,,,,,
+,,,,,,,,,,,,,
+Setup,,,,subject,,,,,,,,,
+,,,date = 'TestDate',,"'sub-%s_ses-%s' % (subject, date)","'Running subject %s' % (subject, )",,,,# 2,,,
+,,,"externalScript = 'python ' + os.path.join(conf.SourcePath,'examples','ExampleExternalScript.py')",,,,,externalScript,externalScript,pause,,,
+,,,,,,,,,,,,,addRequiredStream Biopac (Selene)
+,,,,,,,,,,,,,addRequiredStream Biopac trig Trigger (Selene)
+,,,,,,,,,,,,,launch
+,,,,,,,,,,,,open conf.MaskingAudioFilePath,
+,,,,,,,,,,,,,
+Run,,,,,,,'Start (subj=%s)' % subject,,,pause,,play,start
+,,,time.sleep(1.0),,,,Stop,,,,Reached end of experiment,pause,stop

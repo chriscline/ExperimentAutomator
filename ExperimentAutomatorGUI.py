@@ -1,6 +1,6 @@
 import sys
 import os
-from PySide2 import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 import typing as tp
 import attr
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     app = pg.mkQApp()
 
     if args.experimentTable is None:
-        if False:
+        if True:
             # TODO: debug, delete
             args.experimentTable = os.path.join('Examples', 'MinimalExample.csv')
         else:

@@ -1,4 +1,5 @@
-pyside2
+pyside6
+qtpy
 attrs
 numpy
 pandas

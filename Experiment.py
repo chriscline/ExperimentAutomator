@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 import typing as tp
 import attr
 import pandas as pd

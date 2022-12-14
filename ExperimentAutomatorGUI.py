@@ -304,7 +304,7 @@ if __name__ == '__main__':
     if args.experimentTable is None:
         if False:
             # TODO: debug, delete
-            args.experimentTable = os.path.join('..','PlMapExperiment.csv')
+            args.experimentTable = os.path.join('Examples', 'MinimalExample.csv')
         else:
             args.experimentTable,_ = QtWidgets.QFileDialog.getOpenFileName(None, 'Open experiment table','..','Tables (*.csv *.xlsx)')
 

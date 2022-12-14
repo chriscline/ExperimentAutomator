@@ -23,8 +23,14 @@ class ExperimentAction(QtCore.QObject):
 
     locals: Locals = attr.ib(factory=dict)
 
+    onExceptionWhileRunning: tp.Optional[tp.Callable[[object, Exception,], str]] = attr.ib(default=None, repr=False)
+    """
+    Given this action and an exception, return 'continue', 'stop', or 'raise' to indicate how to proceed; 
+    if no callback specified, exception will always be raised.
+    """
+
     sigStarting: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
-    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object, dict)
+    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object, dict)  # emits (self, locals)
     sigPauseRequested: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     _parentWin: tp.Optional[QtWidgets.QWidget] = None
@@ -62,7 +68,7 @@ class ExperimentAction(QtCore.QObject):
         return out
 
     def __str__(self):
-        d = attr.asdict(self)
+        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',))
         keysToExclude = ['locals']
         for key in d:
             if key[0] == '_':
@@ -366,11 +372,16 @@ class RunScriptAction(ExperimentAction):
                 # hack for weird windows start quote escaping when running a bat file...
                 cmd = 'start /w cmd /c %s' % self._runningScript
             else:
-                cmd = 'start /w "" ' + self._runningScript
+                if False:
+                    cmd = 'start /w "" ' + self._runningScript
+                else:
+                    cmd = self._runningScript
             self._proc = subprocess.Popen(cmd,
                                           shell=True,
-                                          stdout=subprocess.DEVNULL,
-                                          stderr=subprocess.DEVNULL)
+                                          text=True,
+                                          bufsize=1,  # return complete lines in stdout
+                                          stdout=subprocess.PIPE,  # TODO: change to echo stdout and stderr to main ExperimentAutomator log
+                                          stderr=subprocess.STDOUT)
         else:
             # run without opening new window, direct printed output to this process's stdout/stderr (not log)
             self._proc = subprocess.Popen(self._runningScript)
@@ -389,16 +400,43 @@ class RunScriptAction(ExperimentAction):
             raise RuntimeError('Process returned error: %s' % (ret,))
         else:
             logger.info('Process returned: %s' % (ret,))
+        self._timer.stop()
         self._onStop()
 
     def _poll(self):
         assert self._proc is not None
+
+        # log updated stdout/stderr text
+        while True:
+            line = self._proc.stdout.readline()
+            if line is not None and len(line) > 0:
+                logger.info('Subprocess output: %s' % (line,))
+            else:
+                break
+
         ret = self._proc.poll()
         if ret is None:
             # process still running
             return
         else:
-            self._onProcessReturned(ret)
+            try:
+                self._onProcessReturned(ret)
+            except Exception as e:
+                if self.onExceptionWhileRunning is not None:
+                    howToProceed = self.onExceptionWhileRunning(self, e)
+                    if howToProceed == 'raise':
+                        raise e
+                    elif howToProceed == 'stop':
+                        self._timer.stop()
+                        self._onStop()
+                    elif howToProceed == 'continue':
+                        # process finished, register stop anyways
+                        self._timer.stop()
+                        self._onStop()
+                    else:
+                        raise NotImplementedError
+                else:
+                    raise e
 
     def stop(self):
         assert self._proc is not None
@@ -415,6 +453,14 @@ class RunScriptAction(ExperimentAction):
         else:
             # this kills process but not children of `start`
             self._proc.terminate()
+
+        # Get any last process output
+        while True:
+            line = self._proc.stdout.readline()
+            if line is not None and len(line) > 0:
+                logger.info('Subprocess output: %s' % (line,))
+            else:
+                break
 
         logger.info('Process terminated early: %s' % (self._runningScript,))
         self._proc = None

@@ -1,4 +1,5 @@
 Label,repeat,controlFlow,eval,getInput,copyToClipboard,speak,log,runScript,runScriptInBackground,wait,messageBox,VLC,LabRecorder #skip
+,,,"conf.addConfiguration(os.path.join(conf.SourcePath, 'examples', 'ExampleConfiguration.json'))",,,,,,,,,,
 ,,,testVal = True,,,,,,,,,,
 ,start conditionalTest,,,,,,,,,,,,
 ,,if testVal,,,,,testVal was True,,,,,,
@@ -21,4 +22,5 @@ Setup,,,,subject,,,,,,,,,
 ,,,,,,,,,,,,open conf.MaskingAudioFilePath,
 ,,,,,,,,,,,,,
 Run,,,,,,,'Start (subj=%s)' % subject,,,pause,,play,start
-,,,time.sleep(1.0),,,,Stop,,,,Reached end of experiment,pause,stop
+,,,time.sleep(1.0),,,,Stop,,,,,pause,stop
+,,,,,,,,,,,Reached end of experiment,,

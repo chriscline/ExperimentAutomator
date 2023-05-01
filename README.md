@@ -1,5 +1,7 @@
 # ExperimentAutomator
 
+![Example screenshot](doc/Screenshot.png)
+
 ## Install
 
 ### Setting up a new experiment protocol

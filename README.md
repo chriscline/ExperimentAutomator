@@ -1,6 +1,6 @@
 # ExperimentAutomator
 
-![Example screenshot](doc/Screenshot.png)
+<img alt="Screenshot" src="https://user-images.githubusercontent.com/24940426/235484264-a6f5fe5c-f4ac-4dde-b3c2-3ff88ef8b76c.PNG">
 
 ## Install
 

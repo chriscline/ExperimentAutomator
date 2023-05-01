@@ -11,3 +11,4 @@ pyqtgraph
 zmq
 pyperclip
 psutil
+command_runner

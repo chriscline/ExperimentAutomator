@@ -1,4 +1,7 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from command_runner import command_runner, command_runner_threaded
+from concurrent.futures import Future
+import queue
+from qtpy import QtCore, QtGui, QtWidgets
 import typing as tp
 import attr
 import json
@@ -13,6 +16,7 @@ import pyperclip
 import traceback
 
 logger = logging.getLogger(__name__)
+logging.getLogger('command_runner').setLevel(logging.INFO)
 
 Locals = tp.Dict[str, tp.Any]
 
@@ -23,8 +27,14 @@ class ExperimentAction(QtCore.QObject):
 
     locals: Locals = attr.ib(factory=dict)
 
+    onExceptionWhileRunning: tp.Optional[tp.Callable[[object, Exception,], str]] = attr.ib(default=None, repr=False)
+    """
+    Given this action and an exception, return 'continue', 'stop', or 'raise' to indicate how to proceed; 
+    if no callback specified, exception will always be raised.
+    """
+
     sigStarting: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
-    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object, dict)
+    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object, dict)  # emits (self, locals)
     sigPauseRequested: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     _parentWin: tp.Optional[QtWidgets.QWidget] = None
@@ -62,7 +72,7 @@ class ExperimentAction(QtCore.QObject):
         return out
 
     def __str__(self):
-        d = attr.asdict(self)
+        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',))
         keysToExclude = ['locals']
         for key in d:
             if key[0] == '_':
@@ -354,6 +364,9 @@ class RunScriptAction(ExperimentAction):
 
     _runningScript: str = ''
     _proc: tp.Optional[subprocess.Popen] = attr.ib(init=False, default=None)
+    _procFuture: tp.Optional[Future] = attr.ib(init=False, default=None)
+    _procStdoutQueue: queue.Queue = attr.ib(init=False, factory=queue.Queue)
+    _procStderrQueue: queue.Queue = attr.ib(init=False, factory=queue.Queue)
     _timer: tp.Optional[QtCore.QTimer] = attr.ib(default=None, init=False)
 
     def _start(self):
@@ -366,14 +379,21 @@ class RunScriptAction(ExperimentAction):
                 # hack for weird windows start quote escaping when running a bat file...
                 cmd = 'start /w cmd /c %s' % self._runningScript
             else:
-                cmd = 'start /w "" ' + self._runningScript
-            self._proc = subprocess.Popen(cmd,
-                                          shell=True,
-                                          stdout=subprocess.DEVNULL,
-                                          stderr=subprocess.DEVNULL)
-        else:
-            # run without opening new window, direct printed output to this process's stdout/stderr (not log)
-            self._proc = subprocess.Popen(self._runningScript)
+                if False:
+                    cmd = 'start /w "" ' + self._runningScript
+                else:
+                    cmd = self._runningScript
+
+            def setProc(proc):
+                logger.debug(f'Setting proc to {proc}')
+                self._proc = proc
+
+            self._procFuture = command_runner_threaded(cmd,
+                                                       stdout=self._procStdoutQueue,
+                                                       stderr=self._procStderrQueue,
+                                                       method='poller',
+                                                       process_callback=setProc,
+                                                       )
 
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self._poll)
@@ -389,34 +409,88 @@ class RunScriptAction(ExperimentAction):
             raise RuntimeError('Process returned error: %s' % (ret,))
         else:
             logger.info('Process returned: %s' % (ret,))
+        self._timer.stop()
         self._onStop()
 
+    def _setProc(self, proc: subprocess.Popen):
+        assert self._proc is None
+        self._proc = proc
+
+    def _pollProcOutput(self):
+        while True:
+            try:
+                stdout_line = self._procStdoutQueue.get(block=False)
+            except queue.Empty:
+                break
+            else:
+                if stdout_line is None:
+                    break
+                else:
+                    logger.info('Subprocess output: %s' % (stdout_line.rstrip('\r\n')))
+
+        while True:
+            try:
+                stderr_line = self._procStderrQueue.get(block=False)
+            except queue.Empty:
+                break
+            else:
+                if stderr_line is None:
+                    break
+                else:
+                    logger.error('Subprocess error output: %s' % (stderr_line.rstrip('\r\n')))
+
     def _poll(self):
-        assert self._proc is not None
-        ret = self._proc.poll()
-        if ret is None:
+
+        assert self._procFuture is not None
+
+        self._pollProcOutput()
+
+        if not self._procFuture.done():
             # process still running
             return
         else:
-            self._onProcessReturned(ret)
+            ret, output = self._procFuture.result()
+            try:
+                self._onProcessReturned(ret)
+            except Exception as e:
+                if self.onExceptionWhileRunning is not None:
+                    howToProceed = self.onExceptionWhileRunning(self, e)
+                    if howToProceed == 'raise':
+                        raise e
+                    elif howToProceed == 'stop':
+                        self._timer.stop()
+                        self._onStop()
+                    elif howToProceed == 'continue':
+                        # process finished, register stop anyways
+                        self._timer.stop()
+                        self._onStop()
+                    else:
+                        raise NotImplementedError
+                else:
+                    raise e
 
     def stop(self):
-        assert self._proc is not None
+        assert self._procFuture is not None
+        while self._proc is None and not self._procFuture.done():
+            # wait for command_runner to start process
+            time.sleep(0.1)
         self._timer.stop()
-        ret = self._proc.poll()
-        if ret is not None:
-            # process already finished
-            self._onProcessReturned(ret)
-            return
+        if not self._procFuture.done():
+            assert self._proc is not None
+            if True:
+                # adapted from https://stackoverflow.com/a/32814686
+                subprocess.run('taskkill /pid %d /T /F' % self._proc.pid)
+            else:
+                # this kills process but not children of `start`
+                self._proc.terminate()
+            # TODO: maybe use command_runner `on_stop` callback instead
 
-        if True:
-            # adapted from https://stackoverflow.com/a/32814686
-            subprocess.run('taskkill /pid %d /T /F' % self._proc.pid)
-        else:
-            # this kills process but not children of `start`
-            self._proc.terminate()
+        ret, output = self._procFuture.result()  # will block until finished
+
+        self._pollProcOutput()
 
         logger.info('Process terminated early: %s' % (self._runningScript,))
+        self._procFuture = None
         self._proc = None
         self._runningScript = ''
         self._onStop()

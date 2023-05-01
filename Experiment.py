@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 import typing as tp
 import attr
 import pandas as pd
@@ -351,6 +351,7 @@ class Experiment(QtCore.QObject):
         action = self.currentAction
 
         action.sigStopping.connect(self._onActionStopped)
+        action.onExceptionWhileRunning = self._onActionExceptionWhileRunning
         action.sigPauseRequested.connect(self.stop)
         QtCore.QCoreApplication.processEvents()  # make sure all pending redraws are complete before calling potentially blocking action
         if not self.isRunning:
@@ -363,7 +364,7 @@ class Experiment(QtCore.QObject):
                 action.start(self.locals)
 
             except Exception as e:
-                msgStr = 'Error while running action %s\n\n' % action
+                msgStr = 'Error while starting action %s\n\n' % action
                 msgStr += exceptionToStr(e)
                 logger.error(msgStr)
                 msgBox = QtWidgets.QMessageBox()
@@ -388,8 +389,34 @@ class Experiment(QtCore.QObject):
                 else:
                     raise NotImplementedError()
 
+    def _onActionExceptionWhileRunning(self, action: ExperimentAction, e: Exception) -> str:
+        msgStr = 'Error while running action %s\n\n' % action
+        msgStr += exceptionToStr(e)
+        logger.error(msgStr)
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setWindowTitle('Error')
+        msgBox.setText(msgStr)
+        contBtn = msgBox.addButton("Continue", QtWidgets.QMessageBox.AcceptRole)
+        stopBtn = msgBox.addButton("Stop", QtWidgets.QMessageBox.RejectRole)
+        raiseBtn = msgBox.addButton("Raise", QtWidgets.QMessageBox.DestructiveRole)
+        msgBox.setDefaultButton(contBtn)
+
+        msgBox.exec_()
+
+        if msgBox.clickedButton() == stopBtn:
+            logger.info('Stopping experiment due to error')
+            self._pendingActionLocations = [None, None]   # signal to stop when checking for next action and don't advance
+            return 'stop'
+        elif msgBox.clickedButton() == contBtn:
+            return 'continue'
+        elif msgBox.clickedButton() == raiseBtn:
+            return 'raise'
+        else:
+            raise NotImplementedError()
+
     def _onActionStopped(self, action: ExperimentAction, locals: Locals):
         action.sigStopping.disconnect(self._onActionStopped)
+        action.onExceptionWhileRunning = None
         if action != self.currentAction:
             # outdated action
             logger.warning('Outdated action stopped. Not saving locals')
@@ -470,7 +497,13 @@ class Experiment(QtCore.QObject):
                     # stop here
                     if self.isRunning:
                         self.stop()
-                    continue
+                    # if followed by another None, then don't advance to next action
+                    if len(self._pendingActionLocations) > 0 and self._pendingActionLocations[0] is None:
+                        self._pendingActionLocations.pop(0)
+                        self._createCurrentAction()
+                        break
+                    else:
+                        continue
                 self._currentRow = loc[0]
                 self._currentCol = loc[1]
                 assert 0 <= self._currentRow < len(self.tbl.index)

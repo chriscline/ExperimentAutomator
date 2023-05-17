@@ -32,7 +32,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.expModel = ExperimentTableModel(experiment=self.exp)
 
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.NoContextMenu)
         self.mainToolbar = QtWidgets.QToolBar()
+        self.mainToolbar.setFloatable(False)
+        self.mainToolbar.setMovable(False)
         self.mainToolbar.setObjectName('MainToolBar')
         self.mainToolbar.setIconSize(QtCore.QSize(72, 72))
         self.mainToolbar.setFixedHeight(80)

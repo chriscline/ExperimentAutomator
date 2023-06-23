@@ -72,7 +72,7 @@ class ExperimentAction(QtCore.QObject):
         return out
 
     def __str__(self):
-        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',))
+        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',) and attrib.init)
         keysToExclude = ['locals']
         for key in d:
             if key[0] == '_':
@@ -105,6 +105,9 @@ class NoninterruptibleAction(ExperimentAction):
 class EvalAction(NoninterruptibleAction):
     key: tp.ClassVar[str] = 'eval'
     evalStr: str = ''
+
+    def __attrs_post_init__(self):
+        return super().__attrs_post_init__()
 
     def _start(self):
         if len(self.evalStr) > 0:

@@ -378,7 +378,7 @@ class RunScriptAction(ExperimentAction):
 
         if True:
             # run in separate command window
-            if '.bat' in self._runningScript:
+            if '.bat' in self._runningScript and False:
                 # hack for weird windows start quote escaping when running a bat file...
                 cmd = 'start /w cmd /c %s' % self._runningScript
             else:

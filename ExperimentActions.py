@@ -396,6 +396,7 @@ class RunScriptAction(ExperimentAction):
                                                        stderr=self._procStderrQueue,
                                                        method='poller',
                                                        process_callback=setProc,
+                                                       shell=True
                                                        )
 
         self._timer = QtCore.QTimer()
@@ -407,6 +408,9 @@ class RunScriptAction(ExperimentAction):
 
     def _onProcessReturned(self, ret):
         assert ret is not None
+
+        self._pollProcOutput()
+
         # TODO: print return code, generate error if return code indicates error
         if ret != 0:
             raise RuntimeError('Process returned error: %s' % (ret,))

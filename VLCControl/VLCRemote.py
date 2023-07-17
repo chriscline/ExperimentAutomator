@@ -17,8 +17,10 @@ from Configuration import globalConfiguration
 class VLCRemote:
     _telnetPort: int = 4212
     _telnetPassword: str = ''
-    _telnet: Telnet = attr.ib(init=False)
     _playerTitle: str | None = None
+
+    _telnet: Telnet = attr.ib(init=False)
+    _proc: subprocess.Popen = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         if len(self._telnetPassword) == 0:
@@ -43,7 +45,10 @@ class VLCRemote:
         if self._playerTitle is not None:
             args.extend(['--meta-title', self._playerTitle])  # TODO: check that this escapes spaces correctly
 
-        p = subprocess.Popen(args)
+        if self._proc is not None:
+            raise NotImplementedError  # TODO: terminate previous proc before launching new one
+
+        self._proc = subprocess.Popen(args)
         logger.info('Launched VLC')
 
     def _sendCommand(self, cmd: str):
@@ -104,6 +109,7 @@ class VLCRemote:
     def load(self, filepath: str):
         assert os.path.exists(filepath)
         self._sendCommand('clear')  # clear previous play item(s)
+        filepath = os.path.normpath(filepath)
         self._sendCommand('enqueue %s' % filepath)
         self.pause()
 

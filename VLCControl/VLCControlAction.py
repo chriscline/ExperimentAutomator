@@ -26,8 +26,10 @@ class _VLCRemoteManager(metaclass=Singleton):
 
     def getRemote(self, key: str | None = None) -> VLCRemote:
         if key not in self._remotes:
+            port = 4212 + len(self._remotes)
+            logger.debug(f'Instantiating VLCRemote {key} on port {port}')
             self._remotes[key] = VLCRemote(playerTitle=key, 
-                                           telnetPort=4212 + len(self._remotes))
+                                           telnetPort=port)
 
         return self._remotes[key]
 
@@ -49,9 +51,9 @@ class VLCControlAction(NoninterruptibleAction):
         args = cmdAndArgs[1:]
 
         if cmd == 'instance':
-            # first arg is an instanceKey referencing a specific player instance
-            instanceKey = args[0]
-            logger.info('Operating on VLC instance {instanceKey}')
+            # first arg is an instanceKey (or variable / statement without spaces referring to an instanceKey) referencing a specific player instance
+            instanceKey = self._evalStr(args[0])
+            logger.info(f'Operating on VLC instance {instanceKey}')
             vlc = self._remoteManager.getRemote(key=instanceKey)
             cmd = args[1]  # next arg is command to apply to specified instance
             args = args[2:]  # everything else is args for the command

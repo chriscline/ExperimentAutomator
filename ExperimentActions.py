@@ -127,6 +127,7 @@ class EvalAction(NoninterruptibleAction):
                 line_number = traceback.extract_tb(tb)[-1][1]
                 logger.error("%s at line %d: %s" % (error_class, line_number, detail))
                 raise err
+            logger.debug('Done evaluating \'%s\'' % self.evalStr)
         self._onStop()
 
     @classmethod

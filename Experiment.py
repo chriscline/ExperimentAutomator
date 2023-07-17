@@ -593,8 +593,19 @@ class ExperimentTableModel(QtCore.QAbstractTableModel):
     def __init__(self, experiment: Experiment, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent=parent)
         self._exp = experiment
-        self._exp.sigCurrentActionAboutToChange.connect(lambda: self.layoutAboutToBeChanged.emit())
-        self._exp.sigCurrentActionChanged.connect(lambda: self.layoutChanged.emit())
+
+        def currentActionAboutToChange():
+            logger.debug('Emitting layoutAboutToBeChanged')
+            self.layoutAboutToBeChanged.emit()
+            logger.debug('Emitted layoutAboutToBeChanged')
+
+        def currentActionChanged():
+            logger.debug('Emitting layoutChanged')
+            self.layoutChanged.emit()
+            logger.debug('Emitted layoutChanged')
+
+        #self._exp.sigCurrentActionAboutToChange.connect(currentActionAboutToChange)
+        #self._exp.sigCurrentActionChanged.connect(currentActionChanged)
 
         self._exp.sigCurrentActionChanged.connect(
             lambda:

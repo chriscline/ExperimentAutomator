@@ -321,18 +321,18 @@ class CopyToClipboardAction(NoninterruptibleAction):
 @attr.s(auto_attribs=True)
 class WaitAction(ExperimentAction):
     key: tp.ClassVar[str] = 'wait'
-    duration: tp.Optional[float] = None
+    duration: tp.Optional[str]  = None
 
     _timer: tp.Optional[QtCore.QTimer] = attr.ib(default=None, init=False)
     _hasStarted: bool = False
 
     def _start(self):
         if self.duration is not None:
+            duration = int(round(float(self._evalStr(self.duration))*1.e3))
             self._timer = QtCore.QTimer()
             self._timer.setSingleShot(True)
             self._timer.timeout.connect(self._onStop)
-            duration = int(round(self.duration*1e3))
-            self._timer.setInterval(int(round(self.duration*1e3)))
+            self._timer.setInterval(duration)
             logger.info('Waiting for %s s' % (duration/1.e3,))
             self._timer.start()
         else:
@@ -356,7 +356,7 @@ class WaitAction(ExperimentAction):
         if s == 'pause':
             duration = None
         else:
-            duration = float(s)
+            duration = s
         return cls(duration=duration, **kwargs)
 
 

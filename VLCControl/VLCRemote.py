@@ -11,14 +11,16 @@ import time
 logger = logging.getLogger(__name__)
 
 from Configuration import globalConfiguration
-from Misc import Singleton
 
 
 @attr.s(auto_attribs=True)
-class VLCRemote(metaclass=Singleton):
+class VLCRemote:
     _telnetPort: int = 4212
     _telnetPassword: str = ''
+    _playerTitle: str | None = None
+
     _telnet: Telnet = attr.ib(init=False)
+    _proc: subprocess.Popen = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         if len(self._telnetPassword) == 0:
@@ -36,12 +38,17 @@ class VLCRemote(metaclass=Singleton):
         self._sendCommand(self._telnetPassword)
 
     def launchVLC(self):
-        args = (globalConfiguration.VLCPath,
+        args = [globalConfiguration.VLCPath,
                 '--extraintf', 'telnet',
                 '--telnet-port', str(self._telnetPort),
-                '--telnet-password', self._telnetPassword)
+                '--telnet-password', self._telnetPassword]
+        if self._playerTitle is not None:
+            args.extend(['--meta-title', self._playerTitle])  # TODO: check that this escapes spaces correctly
 
-        p = subprocess.Popen(args)
+        if self._proc is not None:
+            raise NotImplementedError  # TODO: terminate previous proc before launching new one
+
+        self._proc = subprocess.Popen(args)
         logger.info('Launched VLC')
 
     def _sendCommand(self, cmd: str):
@@ -63,7 +70,7 @@ class VLCRemote(metaclass=Singleton):
         else:
             pass # do nothing, already paused
 
-    def isPlaying(self):
+    def isPlaying(self) -> bool:
         resp = self._getResponseToCommand('status')
         if 'state paused' in resp:
             return False
@@ -73,6 +80,28 @@ class VLCRemote(metaclass=Singleton):
             return True
         else:
             raise NotImplementedError()
+        
+    def getVolume(self) -> float:
+        """
+        Returns value >= 0, where 1.0 is 100% volume in VLC. Note that volume can be set to higher than 100%.
+        """
+        resp = self._getResponseToCommand('volume')[:-2].strip()
+        volume = int(resp)
+        volume = volume / 256.0  # 256 (not 255?) corresponds to 100% volume
+        return volume
+        
+    def setVolume(self, newVolume: float):
+        """
+        newVolume should be >= 0. Value of 1.0 corresponds to 100% volume, but may be set as high as 1.25 (125% volume).
+        """
+
+        assert 0 <= newVolume <= 1.25
+
+        volume = int(round(newVolume * 256))
+
+        self._sendCommand(f'volume {volume}')
+
+        assert int(round(self.getVolume() * 256)) == volume
 
     def enableRepeat(self):
         self._sendCommand('repeat on')
@@ -80,6 +109,7 @@ class VLCRemote(metaclass=Singleton):
     def load(self, filepath: str):
         assert os.path.exists(filepath)
         self._sendCommand('clear')  # clear previous play item(s)
+        filepath = os.path.normpath(filepath)
         self._sendCommand('enqueue %s' % filepath)
         self.pause()
 

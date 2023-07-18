@@ -1,0 +1,35 @@
+Label,eval,VLC,wait
+,"conf.addConfiguration(os.path.join(conf.SourcePath, 'examples', 'ExampleConfiguration.json'))",,
+Launching / loading audio,a = 1,open C:\Windows\Media\Ring01.wav,
+,,instance sound1 open C:\Windows\Media\Ring02.wav,
+,,instance sound2 open C:\Windows\Media\Ring03.wav,
+,,instance sound3 open C:\Windows\Media\Ring04.wav,
+,,,
+Setting volumes,,setVolume 0.5,
+,,instance sound1 setVolume 0.6,
+,,instance sound2 setVolume 0.7,
+,,instance sound3 setVolume 0.8,
+,,,
+Getting volumes,,getVolume volume0,
+,,getVolume volume1,
+,,getVolume volume2,
+,,getVolume volume3,
+,,,
+Playing audio sequentially,,play,1
+,,pause,
+,,instance sound1 play,1
+,,instance sound1 pause,
+,,instance sound2 play,1
+,,instance sound2 pause,
+,,instance sound3 play,1
+,,instance sound3 pause,
+,,,
+Playing audio concurrently,,play,1
+,,instance sound1 play,1
+,,instance sound2 play,1
+,,instance sound3 play,1
+,,,10
+,,pause,1
+,,instance sound1 pause,1
+,,instance sound2 pause,1
+,,instance sound3 pause,1

@@ -593,21 +593,32 @@ class ExperimentTableModel(QtCore.QAbstractTableModel):
     def __init__(self, experiment: Experiment, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent=parent)
         self._exp = experiment
-        self._exp.sigCurrentActionAboutToChange.connect(lambda: self.layoutAboutToBeChanged.emit())
-        self._exp.sigCurrentActionChanged.connect(lambda: self.layoutChanged.emit())
+
+        def currentActionAboutToChange():
+            logger.debug('Emitting layoutAboutToBeChanged')
+            self.layoutAboutToBeChanged.emit()
+            logger.debug('Emitted layoutAboutToBeChanged')
+
+        def currentActionChanged():
+            logger.debug('Emitting layoutChanged')
+            self.layoutChanged.emit()
+            logger.debug('Emitted layoutChanged')
+
+        #self._exp.sigCurrentActionAboutToChange.connect(currentActionAboutToChange)
+        #self._exp.sigCurrentActionChanged.connect(currentActionChanged)
 
         self._exp.sigCurrentActionChanged.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), QtCore.Qt.BackgroundRole))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
         self._exp.sigCurrentActionChanged.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.previousRow, self._exp.previousCol), self.index(self._exp.previousRow, self._exp.previousCol), QtCore.Qt.BackgroundRole))
+            self.dataChanged.emit(self.index(self._exp.previousRow, self._exp.previousCol), self.index(self._exp.previousRow, self._exp.previousCol), [QtCore.Qt.BackgroundRole]))
         self._exp.sigStartedRunning.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), QtCore.Qt.BackgroundRole))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
         self._exp.sigStoppedRunning.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), QtCore.Qt.BackgroundRole))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
 
         self._exp.sigContentsAboutToChange.connect(lambda locs: self.layoutAboutToBeChanged.emit())
         self._exp.sigContentsChanged.connect(lambda locs: self.layoutChanged.emit())

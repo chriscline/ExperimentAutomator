@@ -72,7 +72,7 @@ class ExperimentAction(QtCore.QObject):
         return out
 
     def __str__(self):
-        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',))
+        d = attr.asdict(self, filter=lambda attrib, val: attrib.name not in ('onExceptionWhileRunning',) and attrib.init)
         keysToExclude = ['locals']
         for key in d:
             if key[0] == '_':
@@ -106,6 +106,9 @@ class EvalAction(NoninterruptibleAction):
     key: tp.ClassVar[str] = 'eval'
     evalStr: str = ''
 
+    def __attrs_post_init__(self):
+        return super().__attrs_post_init__()
+
     def _start(self):
         if len(self.evalStr) > 0:
             logger.info('Evaluating \'%s\'' % self.evalStr)
@@ -124,6 +127,7 @@ class EvalAction(NoninterruptibleAction):
                 line_number = traceback.extract_tb(tb)[-1][1]
                 logger.error("%s at line %d: %s" % (error_class, line_number, detail))
                 raise err
+            logger.debug('Done evaluating \'%s\'' % self.evalStr)
         self._onStop()
 
     @classmethod
@@ -318,18 +322,18 @@ class CopyToClipboardAction(NoninterruptibleAction):
 @attr.s(auto_attribs=True)
 class WaitAction(ExperimentAction):
     key: tp.ClassVar[str] = 'wait'
-    duration: tp.Optional[float] = None
+    duration: tp.Optional[str]  = None
 
     _timer: tp.Optional[QtCore.QTimer] = attr.ib(default=None, init=False)
     _hasStarted: bool = False
 
     def _start(self):
         if self.duration is not None:
+            duration = int(round(float(self._evalStr(self.duration))*1.e3))
             self._timer = QtCore.QTimer()
             self._timer.setSingleShot(True)
             self._timer.timeout.connect(self._onStop)
-            duration = int(round(self.duration*1e3))
-            self._timer.setInterval(int(round(self.duration*1e3)))
+            self._timer.setInterval(duration)
             logger.info('Waiting for %s s' % (duration/1.e3,))
             self._timer.start()
         else:
@@ -353,7 +357,7 @@ class WaitAction(ExperimentAction):
         if s == 'pause':
             duration = None
         else:
-            duration = float(s)
+            duration = s
         return cls(duration=duration, **kwargs)
 
 
@@ -375,7 +379,7 @@ class RunScriptAction(ExperimentAction):
 
         if True:
             # run in separate command window
-            if '.bat' in self._runningScript:
+            if '.bat' in self._runningScript and False:
                 # hack for weird windows start quote escaping when running a bat file...
                 cmd = 'start /w cmd /c %s' % self._runningScript
             else:
@@ -393,6 +397,7 @@ class RunScriptAction(ExperimentAction):
                                                        stderr=self._procStderrQueue,
                                                        method='poller',
                                                        process_callback=setProc,
+                                                       shell=True
                                                        )
 
         self._timer = QtCore.QTimer()
@@ -404,6 +409,9 @@ class RunScriptAction(ExperimentAction):
 
     def _onProcessReturned(self, ret):
         assert ret is not None
+
+        self._pollProcOutput()
+
         # TODO: print return code, generate error if return code indicates error
         if ret != 0:
             raise RuntimeError('Process returned error: %s' % (ret,))

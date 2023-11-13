@@ -172,6 +172,9 @@ class Experiment(QtCore.QObject):
         # remove repeat column
         tbl.drop(columns='repeat', inplace=True)
 
+         # reindex to avoid repeated sections also repeating their row numbers in GUI
+        tbl.reset_index(drop=True, inplace=True)
+
         self.tbl = tbl
 
     def _parseControlFlowBlocks(self):

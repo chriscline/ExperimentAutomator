@@ -5,7 +5,10 @@ import typing as tp
 import attr
 import random, string
 import logging
-from telnetlib import Telnet
+if sys.version_info[:2] >= (3, 12):
+    from telnetlib3.telnetlib import Telnet
+else:
+    from telnetlib import Telnet
 import time
 
 logger = logging.getLogger(__name__)

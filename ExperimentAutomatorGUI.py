@@ -303,6 +303,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     app = pg.mkQApp()
+    import qtawesome as qta
+    qta.light(app)  # force light mode 
 
     if args.experimentTable is None:
         if True:

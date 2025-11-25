@@ -12,3 +12,5 @@ zmq
 pyperclip
 psutil
 command_runner
+telnetlib3
+qtawesome

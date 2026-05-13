@@ -25,16 +25,16 @@ Locals = tp.Dict[str, tp.Any]
 class ExperimentAction(QtCore.QObject):
     key: tp.ClassVar[str] = ''
 
-    locals: Locals = attr.ib(factory=dict)
+    locals: tp.Optional[Locals] = attr.ib(default=None)
 
     onExceptionWhileRunning: tp.Optional[tp.Callable[[object, Exception,], str]] = attr.ib(default=None, repr=False)
     """
-    Given this action and an exception, return 'continue', 'stop', or 'raise' to indicate how to proceed; 
+    Given this action and an exception, return 'continue', 'stop', or 'raise' to indicate how to proceed;
     if no callback specified, exception will always be raised.
     """
 
     sigStarting: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
-    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object, dict)  # emits (self, locals)
+    sigStopping: tp.ClassVar[QtCore.Signal] = QtCore.Signal(object)  # emits (self,)
     sigPauseRequested: tp.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     _parentWin: tp.Optional[QtWidgets.QWidget] = None
@@ -60,7 +60,7 @@ class ExperimentAction(QtCore.QObject):
         raise NotImplementedError("Should be implemented by subclass")
 
     def _onStop(self):
-        self.sigStopping.emit(self, self.locals)
+        self.sigStopping.emit(self)
         self._didStop = True
         logger.debug('Finished action %s' % self)
 

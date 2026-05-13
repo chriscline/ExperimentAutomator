@@ -383,10 +383,10 @@ class Experiment(QtCore.QObject):
                 if msgBox.clickedButton() == stopBtn:
                     logger.info('Stopping experiment due to error')
                     self._isRunning = False
-                    self._onActionStopped(action, self.locals)
+                    self._onActionStopped(action)
                     self.sigStoppedRunning.emit()
                 elif msgBox.clickedButton() == contBtn:
-                    self._onActionStopped(action, self.locals)
+                    self._onActionStopped(action)
                 elif msgBox.clickedButton() == raiseBtn:
                     raise e
                 else:
@@ -417,15 +417,15 @@ class Experiment(QtCore.QObject):
         else:
             raise NotImplementedError()
 
-    def _onActionStopped(self, action: ExperimentAction, locals: Locals):
-        action.sigStopping.disconnect(self._onActionStopped)
-        action.onExceptionWhileRunning = None
+    def _onActionStopped(self, action: ExperimentAction):
         if action != self.currentAction:
-            # outdated action
-            logger.warning('Outdated action stopped. Not saving locals')
+            # outdated action; leave the live action's signal/callback wiring alone
+            logger.warning('Outdated action stopped, ignoring')
             return
 
-        self.locals = locals
+        action.sigStopping.disconnect(self._onActionStopped)
+        action.onExceptionWhileRunning = None
+
         if self._isRunning:
             didJump = False
             if isinstance(action, ControlFlowAction):

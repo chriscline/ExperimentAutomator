@@ -16,6 +16,7 @@ import traceback
 from Experiment import Experiment, ExperimentTableModel
 from LogConsole import LogConsole
 from Configuration import globalConfiguration
+from _version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -295,6 +296,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s.%(msecs)03d %(filename)20s %(lineno)4d %(levelname)5s: %(message)s',
                         datefmt='%H:%M:%S')
+
+    logger.info('ExperimentAutomator v%s', __version__)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--experimentTable',

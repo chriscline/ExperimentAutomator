@@ -586,7 +586,7 @@ class Experiment(QtCore.QObject):
         else:
             raise NotImplementedError('Unsupported table extension: %s' % ext)
         newTbl.replace('nan', '')
-        newTbl.fillna('', inplace=True)
+        newTbl = newTbl.astype(object).fillna('')
         return cls(tbl=newTbl, **kwargs)
 
 

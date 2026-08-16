@@ -48,7 +48,7 @@ class Configuration:
                     else:
                         pass
 
-                    regex = re.compile('<(\w+)>')
+                    regex = re.compile(r'<(\w+)>')
                     match = regex.search(val)
                     while match is not None:
                         subItem = match.group(1)

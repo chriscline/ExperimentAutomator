@@ -12,18 +12,26 @@
     2. Otherwise, you can clone directly with something like `git clone https://github.com/chriscline/ExperimentAutomator`
     
     Whether you choose the first or second option, the code should be located at `MyExperimentProtocol/ExperimentAutomator`.
-3. Install Python 3.7 or greater, and make sure you're calling the correct version of Python when you run `python` commands below.
+3. Install Python 3.10 or greater, and make sure you're calling the correct version of Python when you run `python` commands below.
 4. [Recommended] Make a virtualenv for your experiment protocol with something like `python -m venv C:\envs\MyExperimentVenv`. 
     Prior to any commands below, make sure to activate your virtualenv with something like `C:\envs\MyExperimentVenv\Scripts\activate.bat`
-5. Install Python dependencies for ExperimentAutomator with `pip install -r MyExperimentProtocol/ExperimentAutomator/requirements.txt`
+5. Install ExperimentAutomator and its dependencies with `pip install -e MyExperimentProtocol/ExperimentAutomator`
 6. Create an experiment script as a `.csv` file (e.g. at `MyExperimentProtocol/Scripts/MyExperimentScript.csv`). See [MinimalExample.csv](examples/MinimalExample.csv) for an example.
 7. Create an experiment launcher script (e.g. at `MyExperimentProtocol/RunMyExperiment.bat`). A script to activate the virtualenv and launch ExperimentAutomator with your experiment file would be something like:
 
         @echo off
         setlocal
         CALL C:\envs\MyExperimentVenv\Scripts\activate.bat
-        set PYTHONPATH=%~dp0\ExperimentAutomator
-        python %~dp0\ExperimentAutomator\ExperimentAutomatorGUI.py --experimentTable ".\Scripts\MyExperimentScript.csv"
+        experiment-automator --experimentTable ".\Scripts\MyExperimentScript.csv"
         CALL C:\envs\MyExperimentVenv\Scripts\deactivate.bat
         endlocal
 8. Try running the launcher script!
+
+## Development
+
+Dependencies and packaging are managed with [uv](https://docs.astral.sh/uv/). After cloning the repo and [installing uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+- `uv sync` creates a virtual environment at `.venv` and installs dependencies plus ExperimentAutomator itself (as an editable install), downloading a compatible version of Python first if needed.
+- `uv run experiment-automator --experimentTable examples\MinimalExample.csv` launches the GUI.
+- `uv add <package>` / `uv remove <package>` add or remove dependencies, updating both `pyproject.toml` and `uv.lock`.
+- `uv build` builds a source distribution and wheel into `dist/`.

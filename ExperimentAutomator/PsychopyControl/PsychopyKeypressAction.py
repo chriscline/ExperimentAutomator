@@ -2,9 +2,8 @@ import typing as tp
 import attr
 import logging
 import time
-from pywinauto.application import Application
 
-from ExperimentActions import ExperimentAction, NoninterruptibleAction
+from ExperimentAutomator.ExperimentActions import ExperimentAction, NoninterruptibleAction
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +18,10 @@ class PsychopyKeypressAction(NoninterruptibleAction):
         super().__attrs_post_init__()
 
     def _start(self):
+        # import here rather than at module level so that pywinauto's COM and DPI
+        # initialization happens after Qt's, avoiding startup conflicts
+        from pywinauto.application import Application
+
         prevWin = Application(backend="uia").connect(active_only=True).top_window()
         app = Application(backend='uia').connect(title='Psychopy', timeout=1)
         win = app.window(title='PsychoPy')

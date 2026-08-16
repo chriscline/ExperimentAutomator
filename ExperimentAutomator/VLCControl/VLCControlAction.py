@@ -3,9 +3,9 @@ import attr
 import logging
 import time
 
-from ExperimentActions import ExperimentAction, NoninterruptibleAction
+from ExperimentAutomator.ExperimentActions import ExperimentAction, NoninterruptibleAction
 from . import VLCRemote
-from Misc import Singleton
+from ExperimentAutomator.Misc import Singleton
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,8 @@ import attr
 import logging
 import zmq
 
-from ExperimentActions import ExperimentAction, NoninterruptibleAction
-from Misc import Singleton
+from ExperimentAutomator.ExperimentActions import ExperimentAction, NoninterruptibleAction
+from ExperimentAutomator.Misc import Singleton
 
 logger = logging.getLogger(__name__)
 

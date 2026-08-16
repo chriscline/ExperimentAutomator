@@ -8,14 +8,14 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-from ExperimentActions import ExperimentAction, Locals, ActionTypes, ControlFlowAction
-from VLCControl import VLCControlAction
-from LSLControl import LabRecorderAction
-from BrainProductsControl import BVRecorderAction
-from PsychopyControl import ZMQPicturePresenterAction
-from Misc import exceptionToStr
+from ExperimentAutomator.ExperimentActions import ExperimentAction, Locals, ActionTypes, ControlFlowAction
+from ExperimentAutomator.VLCControl import VLCControlAction
+from ExperimentAutomator.LSLControl import LabRecorderAction
+from ExperimentAutomator.BrainProductsControl import BVRecorderAction
+from ExperimentAutomator.PsychopyControl import ZMQPicturePresenterAction
+from ExperimentAutomator.Misc import exceptionToStr
 
-from Configuration import globalConfiguration
+from ExperimentAutomator.Configuration import globalConfiguration
 
 
 @attr.s(auto_attribs=True, cmp=False, init=False)

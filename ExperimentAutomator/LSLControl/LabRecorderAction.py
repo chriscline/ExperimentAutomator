@@ -3,7 +3,7 @@ import attr
 import logging
 import time
 
-from ExperimentActions import ExperimentAction, NoninterruptibleAction
+from ExperimentAutomator.ExperimentActions import ExperimentAction, NoninterruptibleAction
 from . import LabRecorderAutomator
 
 logger = logging.getLogger(__name__)

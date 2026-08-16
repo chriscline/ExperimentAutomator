@@ -13,7 +13,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-from Configuration import globalConfiguration
+from ExperimentAutomator.Configuration import globalConfiguration
 
 
 @attr.s(auto_attribs=True)

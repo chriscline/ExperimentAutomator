@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ExperimentAutomator"
+description = "GUI for running automated experiment protocols defined in spreadsheet (csv/xlsx) action tables"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Chris Cline" },
+]
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "pyside6",
+    "qtpy",
+    "attrs",
+    "numpy",
+    "pandas",
+    "xlrd",
+    "pyttsx3",  # for text-to-speech
+    "pywin32 ; sys_platform == 'win32'",  # required by pyttsx3 on windows
+    "pywinauto",
+    "pyqtgraph",
+    "pyzmq",
+    "pyperclip",
+    "psutil",
+    "command_runner",
+    "telnetlib3 ; python_version >= '3.13'",  # for vlc control (telnetlib removed from stdlib in 3.13)
+]
+
+[project.urls]
+Repository = "https://github.com/chriscline/ExperimentAutomator"
+
+[project.scripts]
+experiment-automator = "ExperimentAutomator.ExperimentAutomatorGUI:main"
+
+[tool.uv]
+# Windows-only tool (pywinauto, taskkill, BrainVision Recorder, etc.), so only
+# resolve the lockfile for Windows
+environments = ["sys_platform == 'win32'"]
+
+[tool.setuptools.packages.find]
+include = ["ExperimentAutomator*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "ExperimentAutomator._version.__version__" }
+
+[tool.setuptools.package-data]
+"ExperimentAutomator.Configuration" = ["*.json"]
+"ExperimentAutomator.LSLControl" = ["*.cfg"]
+"ExperimentAutomator.resources" = ["*.svg"]

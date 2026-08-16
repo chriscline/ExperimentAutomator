@@ -4,8 +4,8 @@ import logging
 import time
 import os
 
-from Configuration import globalConfiguration
-from ExperimentActions import ExperimentAction, NoninterruptibleAction
+from ExperimentAutomator.Configuration import globalConfiguration
+from ExperimentAutomator.ExperimentActions import ExperimentAction, NoninterruptibleAction
 from . import BVRecorderAutomator
 
 logger = logging.getLogger(__name__)

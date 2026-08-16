@@ -1,5 +1,3 @@
-import pywinauto
-from pywinauto.application import Application
 import os
 import argparse
 import logging
@@ -10,8 +8,8 @@ import subprocess
 import tempfile
 import time
 
-from Configuration import globalConfiguration
-from Misc import Singleton
+from ExperimentAutomator.Configuration import globalConfiguration
+from ExperimentAutomator.Misc import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +116,11 @@ class LabRecorderAutomator(metaclass=Singleton):
                  doStartRecording: bool = False,
                  doAltTabRefocus: bool = True
                  ):
+        # import here rather than at module level so that pywinauto's COM and DPI
+        # initialization happens after Qt's, avoiding startup conflicts
+        import pywinauto
+        import pywinauto.keyboard
+        from pywinauto.application import Application
 
         if not doAltTabRefocus:
             logger.debug('Looking for current top window')

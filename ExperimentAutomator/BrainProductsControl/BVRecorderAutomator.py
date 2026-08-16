@@ -8,7 +8,7 @@ import shutil
 
 import win32com.client
 
-from Misc import Singleton
+from ExperimentAutomator.Misc import Singleton
 
 logger = logging.getLogger(__name__)
 

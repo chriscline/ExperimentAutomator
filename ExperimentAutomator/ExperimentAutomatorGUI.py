@@ -10,13 +10,14 @@ import time
 import argparse
 import psutil
 import subprocess
+import dbm
 import shelve
 import traceback
 
-from Experiment import Experiment, ExperimentTableModel
-from LogConsole import LogConsole
-from Configuration import globalConfiguration
-from _version import __version__
+from ExperimentAutomator.Experiment import Experiment, ExperimentTableModel
+from ExperimentAutomator.LogConsole import LogConsole
+from ExperimentAutomator.Configuration import globalConfiguration
+from ExperimentAutomator._version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -265,8 +266,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadSettings(self):
         settingsPath = self._getPersistentSettingsPath()
-        ext = '.dat'
-        if not os.path.exists(settingsPath + ext):
+        if dbm.whichdb(settingsPath) is None:
             logging.info('No settings to load')
             return
 
@@ -276,7 +276,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.restoreGeometry(s['window_geometry'])
                 self.restoreState(s['window_state'])
         except Exception as e:
-            logger.warning('Problem reading previous settings.')
+            logger.warning('Problem reading previous settings: %s' % (e,))
 
     def saveSettings(self):
         settingsPath = self._getPersistentSettingsPath()
@@ -292,7 +292,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logger.error('Unable to save settings: could not open settings file for writing.')
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s.%(msecs)03d %(filename)20s %(lineno)4d %(levelname)5s: %(message)s',
                         datefmt='%H:%M:%S')
@@ -317,3 +317,7 @@ if __name__ == '__main__':
     mainWin = MainWindow(tablePath=args.experimentTable)
     mainWin.show()
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

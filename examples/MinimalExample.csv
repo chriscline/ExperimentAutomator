@@ -1,5 +1,5 @@
 Label,repeat,controlFlow,eval,getInput,copyToClipboard,speak,log,runScript,runScriptInBackground,wait,messageBox,VLC,LabRecorder #skip
-,,,"conf.addConfiguration(os.path.join(conf.SourcePath, 'examples', 'ExampleConfiguration.json'))",,,,,,,,,,
+,,,"conf.addConfiguration(os.path.join(conf.SourcePath, '..', 'examples', 'ExampleConfiguration.json'))",,,,,,,,,,
 ,,,testVal = True,,,,,,,,,,
 ,start conditionalTest,,,,,,,,,,,,
 ,,if testVal,,,,,testVal was True,,,,,,
@@ -14,7 +14,7 @@ Label,repeat,controlFlow,eval,getInput,copyToClipboard,speak,log,runScript,runSc
 ,,,,,,,,,,,,,
 Setup,,,,subject,,,,,,,,,
 ,,,date = 'TestDate',,"'sub-%s_ses-%s' % (subject, date)","'Running subject %s' % (subject, )",,,,# 2,,,
-,,,"externalScript = 'python ""' + os.path.join(conf.SourcePath,'examples','ExampleExternalScript.py') + '""'",,,,,externalScript,externalScript,pause,,,
+,,,"externalScript = 'python ""' + os.path.join(conf.SourcePath, '..', 'examples', 'ExampleExternalScript.py') + '""'",,,,,externalScript,externalScript,pause,,,
 ,,,invalidScript='python scriptDoesNotExist.py',,,,,invalidScript,invalidScript,,,,
 ,,,,,,,,,,,,,addRequiredStream Biopac (Selene)
 ,,,,,,,,,,,,,addRequiredStream Biopac trig Trigger (Selene)

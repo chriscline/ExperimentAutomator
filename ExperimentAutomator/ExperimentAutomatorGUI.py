@@ -1,6 +1,7 @@
 import sys
 import os
 from qtpy import QtCore, QtGui, QtWidgets
+import qtawesome as qta
 import pyqtgraph as pg
 import typing as tp
 import attr
@@ -42,29 +43,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolbar.setIconSize(QtCore.QSize(72, 72))
         self.mainToolbar.setFixedHeight(80)
 
-        thisDir, _ = os.path.split(os.path.realpath(__file__))
-
         self.restartExpAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir,'Resources','baseline-skip_previous-24px.svg')),
+            qta.icon('mdi6.skip-previous'),
             'Restart')
         self.restartExpAction.triggered.connect(self.exp.restart)
         self.mainToolbar.addAction(self.restartExpAction)
 
         self.prevAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir,'Resources','baseline-fast_rewind-24px.svg')),
+            qta.icon('mdi6.rewind'),
             'Previous')
         self.prevAction.triggered.connect(self.exp.previous)
         self.mainToolbar.addAction(self.prevAction)
 
         self.playAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir, 'Resources', 'baseline-play_arrow-24px.svg')),
+            qta.icon('mdi6.play'),
             '&Play')
         self.playAction.triggered.connect(self._onPlayPause)
         self.playAction.setShortcut(QtGui.QKeySequence(" "))
         self.mainToolbar.addAction(self.playAction)
 
         self.nextAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir,'Resources','baseline-fast_forward-24px.svg')),
+            qta.icon('mdi6.fast-forward'),
             'Next')
         self.nextAction.triggered.connect(self.exp.next)
         self.mainToolbar.addAction(self.nextAction)
@@ -88,13 +87,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolbar.addWidget(spacer)
 
         self.evalAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir, 'Resources', 'console.svg')),
+            qta.icon('mdi6.console'),
             'Evaluate code')
         self.evalAction.triggered.connect(self.evalStr)
         self.mainToolbar.addAction(self.evalAction)
 
         self.logCommentAction = QtWidgets.QAction(
-            QtGui.QIcon(os.path.join(thisDir, 'Resources', 'message-plus.svg')),
+            qta.icon('mdi6.message-plus'),
             'Add comment to log')
         self.logCommentAction.triggered.connect(self.logCommentFromDialog)
         self.mainToolbar.addAction(self.logCommentAction)
@@ -138,18 +137,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.exp.start()
 
     def _onStartedRunning(self):
-        thisDir, _ = os.path.split(os.path.realpath(__file__))
-        self.playAction.setIcon(
-            QtGui.QIcon(os.path.join(thisDir, 'Resources','baseline-pause-24px.svg')))
+        self.playAction.setIcon(qta.icon('mdi6.pause'))
         self.playAction.setText('&Pause')
         self.elapsedTimeUpdateTimer.start()
         for obj in (self.elapsedTimeLabel, self.elapsedTimeField):
             obj.setVisible(True)
 
     def _onStoppedRunning(self):
-        thisDir, _ = os.path.split(os.path.realpath(__file__))
-        self.playAction.setIcon(
-            QtGui.QIcon(os.path.join(thisDir, 'Resources', 'baseline-play_arrow-24px.svg')))
+        self.playAction.setIcon(qta.icon('mdi6.play'))
         self.playAction.setText('&Play')
         self.elapsedTimeUpdateTimer.stop()
         self.timeLastStarted = None

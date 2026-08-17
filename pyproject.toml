@@ -16,6 +16,7 @@ dynamic = ["version"]
 dependencies = [
     "pyside6",
     "qtpy",
+    "qtawesome>=1.4.2",  # for toolbar icons
     "attrs",
     "numpy",
     "pandas",
@@ -51,4 +52,3 @@ version = { attr = "ExperimentAutomator._version.__version__" }
 [tool.setuptools.package-data]
 "ExperimentAutomator.Configuration" = ["*.json"]
 "ExperimentAutomator.LSLControl" = ["*.cfg"]
-"ExperimentAutomator.resources" = ["*.svg"]

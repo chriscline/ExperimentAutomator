@@ -117,10 +117,17 @@ class LabRecorderAutomator(metaclass=Singleton):
                  doAltTabRefocus: bool = True
                  ):
         # import here rather than at module level so that pywinauto's COM and DPI
-        # initialization happens after Qt's, avoiding startup conflicts
-        import pywinauto
-        import pywinauto.keyboard
-        from pywinauto.application import Application
+        # initialization happens after Qt's, avoiding startup conflicts; declare STA
+        # threading to match Qt's, since pywinauto's own COM mode probe can't detect
+        # it (pywin32 swallows the error that the probe relies on)
+        import sys
+        import warnings
+        sys.coinit_flags = 2  # type: ignore  # COINIT_APARTMENTTHREADED
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='Apply externally defined coinit_flags.*')
+            import pywinauto
+            import pywinauto.keyboard
+            from pywinauto.application import Application
 
         if not doAltTabRefocus:
             logger.debug('Looking for current top window')

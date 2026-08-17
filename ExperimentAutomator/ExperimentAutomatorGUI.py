@@ -292,6 +292,9 @@ def main():
                         format='%(asctime)s.%(msecs)03d %(filename)20s %(lineno)4d %(levelname)5s: %(message)s',
                         datefmt='%H:%M:%S')
 
+    # comtypes (used by pyttsx3 for SAPI text-to-speech) is extremely verbose at DEBUG level
+    logging.getLogger('comtypes').setLevel(logging.WARNING)
+
     logger.info('ExperimentAutomator v%s', __version__)
 
     parser = argparse.ArgumentParser()

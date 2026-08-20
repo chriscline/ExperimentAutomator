@@ -17,6 +17,7 @@ import traceback
 
 from ExperimentAutomator.Experiment import Experiment, ExperimentTableModel
 from ExperimentAutomator.LogConsole import LogConsole
+from ExperimentAutomator.VariablesView import VariablesDockWidget
 from ExperimentAutomator.Configuration import globalConfiguration
 from ExperimentAutomator._version import __version__
 
@@ -120,7 +121,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logView.addHandler(logging.getLogger(), level=logging.INFO)
         self.mainLayout.addWidget(self.logView)
         self.mainLayout.setStretchFactor(1, 1)
-        
+
+        self.variablesDock = VariablesDockWidget(experiment=self.exp, parent=self)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.variablesDock)
+        self.variablesDock.hide()  # hidden by default on first run; loadSettings' restoreState re-shows it if previously visible
+        self.variablesAction = self.variablesDock.toggleViewAction()
+        self.variablesAction.setIcon(qta.icon('mdi6.variable'))
+        self.mainToolbar.insertAction(self.evalAction, self.variablesAction)
+
         QtCore.QTimer.singleShot(0, lambda: self.loadSettings())
 
 
@@ -198,6 +206,8 @@ class MainWindow(QtWidgets.QMainWindow):
             logger.error("%s at line %d: %s" % (error_class, line_number, detail))
 
         logger.info('Done evaluating user input')
+
+        self.variablesDock.refresh()
 
     def _scrollToCurrentAction(self):
         self.tblView.scrollTo(self.expModel.index(self.exp.currentRow, self.exp.currentCol))

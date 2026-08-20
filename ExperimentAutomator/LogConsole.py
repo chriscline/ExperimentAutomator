@@ -45,14 +45,16 @@ class LogConsole(QtWidgets.QWidget):
         log.addHandler(handler)
 
     def write(self, s: str):
+        # checked per-write rather than cached so a runtime light/dark theme change is picked up
+        isDark = self.textEdit.palette().color(QtGui.QPalette.Base).lightness() < 128
         if ' ERROR: ' in s:
-            clr = QtGui.QColor(255, 0, 0)
+            clr = QtGui.QColor(255, 80, 80) if isDark else QtGui.QColor(255, 0, 0)
         elif ' WARNING: ' in s:
-            clr = QtGui.QColor(200, 100, 0)
+            clr = QtGui.QColor(255, 160, 0) if isDark else QtGui.QColor(200, 100, 0)
         elif ' DEBUG: ' in s:
             clr = QtGui.QColor(150, 150, 150)
         else:
-            clr = QtGui.QColor(0, 0, 0)
+            clr = self.textEdit.palette().color(QtGui.QPalette.Text)
         self.textEdit.setTextColor(clr)
         self.textEdit.append(s)
         self.repaint()  # make sure that a blocking operation immediately after log doesn't prevent log from printing

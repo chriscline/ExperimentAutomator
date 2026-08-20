@@ -612,16 +612,16 @@ class ExperimentTableModel(QtCore.QAbstractTableModel):
 
         self._exp.sigCurrentActionChanged.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole, QtCore.Qt.ForegroundRole]))
         self._exp.sigCurrentActionChanged.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.previousRow, self._exp.previousCol), self.index(self._exp.previousRow, self._exp.previousCol), [QtCore.Qt.BackgroundRole]))
+            self.dataChanged.emit(self.index(self._exp.previousRow, self._exp.previousCol), self.index(self._exp.previousRow, self._exp.previousCol), [QtCore.Qt.BackgroundRole, QtCore.Qt.ForegroundRole]))
         self._exp.sigStartedRunning.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole, QtCore.Qt.ForegroundRole]))
         self._exp.sigStoppedRunning.connect(
             lambda:
-            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole]))
+            self.dataChanged.emit(self.index(self._exp.currentRow, self._exp.currentCol), self.index(self._exp.currentRow, self._exp.currentCol), [QtCore.Qt.BackgroundRole, QtCore.Qt.ForegroundRole]))
 
         self._exp.sigContentsAboutToChange.connect(lambda locs: self.layoutAboutToBeChanged.emit())
         self._exp.sigContentsChanged.connect(lambda locs: self.layoutChanged.emit())
@@ -653,7 +653,15 @@ class ExperimentTableModel(QtCore.QAbstractTableModel):
                 else:
                     return QtGui.QColor(255, 100, 100)
             else:
-                return QtGui.QColor(255, 255, 255)
+                return None  # use default palette background
+
+        if role == QtCore.Qt.ForegroundRole:
+            if index.row() == self._exp.currentRow and index.column() == self._exp.currentCol:
+                # highlight backgrounds above are light, so text must be dark even when
+                # a dark palette would otherwise draw near-white text
+                return QtGui.QColor(0, 0, 0)
+            else:
+                return None
 
         if role not in(QtCore.Qt.DisplayRole, QtCore.Qt.ToolTipRole):
             return None
